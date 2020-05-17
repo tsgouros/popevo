@@ -18,12 +18,13 @@ class organism(object):
     fitness landscape is a mesh called 'fitnessLandscape'.
     """
 
-    def __init__(self, x, y, parentLoc=(0,0,0), key=0):
+    def __init__(self, x, y, parentLoc=(0,0,0), key=0, duration=20):
         """
         Creates a new organism at (x,y) with z determined by raycasting
         a vertical line onto the fitness landscape. The parent location
         is also specified, and the frame number of the 'birth' event, so
-        the process can be animated.
+        the process can be animated.  The duration is the number of 
+        frames the birth and move are to take.
         """
         self.fitness = 0
         self.fitstep = 0.1
@@ -52,10 +53,26 @@ class organism(object):
         self.reproduced = False
         
         if key != 0:
-            self.obj.keyframe_insert(data_path="location", frame=key)
-            # Move the object, set another key frame.
+            bpy.context.scene.frame_set(key)
+            self.obj.keyframe_insert(data_path="location", 
+                                     frame=key, index=-1)
+            
+            # Move the object to the halfway point, set another key frame.
+            midpoint = ((self.x + parentLoc[0])/2.0, 
+                        (self.y + parentLoc[1])/2.0,
+                        0.1 + (self.fitness + parentLoc[2])/2.0)
+            newFrame = key + int(duration/2.0)
+            bpy.context.scene.frame_set(newFrame)
+            self.obj.location = midpoint
+            self.obj.keyframe_insert(data_path="location", 
+                                     frame=newFrame)
+            
+            # Move the object to its final point, set another key frame.
+            newFrame = key + duration
+            bpy.context.scene.frame_set(newFrame)
             self.obj.location = self.location
-            self.obj.keyframe_insert(data_path="location", frame=key+10)
+            self.obj.keyframe_insert(data_path="location", 
+                                     frame=newFrame, index=-1)
         
     def reproduce(self, N, key=0):
         """
@@ -80,7 +97,7 @@ class pop(object):
     Models a population of organisms.
     """
     def __init__(self, N, key=0):
-        self.population = [organism(random.gauss(0, 0.1), random.gauss(0,0.1)) for i in range(N)]
+        self.population = [organism(random.gauss(0, 0.1), random.gauss(0,0.1), parentLoc=(0,0,0.0765),key=10) for i in range(N)]
 
         self.population.sort(key=lambda ob: ob.fitness)
 
@@ -122,23 +139,24 @@ class pop(object):
         print(self.population)
         
 
+o = organism(0.1,0.1, parentLoc=(0,0,0.0765), key=10)
 
 
-population = pop(3, key=20)
+#population = pop(3, key=20)
 
-population.print()
+#population.print()
 
-population.reproduce(2, key=70)
+#population.reproduce(2, key=70)
 
-population.print()
+#population.print()
 
-population.retire(key=120)
+#population.retire(key=120)
 
-population.print()
+#population.print()
 
-population.select(0.5, key=170)
+#population.select(0.5, key=170)
 
-population.print()
+#population.print()
 
 #time.sleep(5)
 
