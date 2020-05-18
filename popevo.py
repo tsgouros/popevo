@@ -27,8 +27,8 @@ class organism(object):
         frames the birth and move are to take.
         """
         self.fitness = 0
-        self.fitstep = 0.1
-        self.radius = 0.02
+        self.fitstep = 0.025
+        self.radius = 0.005
         landscape = bpy.data.objects['fitnessLandscape']
         res = landscape.ray_cast((x,y,1000.0),(0,0,-1))
         if res[0]:
@@ -130,7 +130,7 @@ class pop(object):
         self.population = []
 
         for i in range(N):
-            o = organism(random.gauss(0, 0.1), random.gauss(0,0.1), 
+            o = organism(random.gauss(0, 0.05), random.gauss(0,0.05), 
                          parentLoc=(0,0,0.0765), key=key, duration=20) 
             
             # Move new organisms into the population collection.
@@ -189,7 +189,8 @@ class pop(object):
 
 
     def print(self):
-        print(self.population)
+        for p in self.population:
+            print(p.x, p.y, p.obj.location)
         
 
 #o = organism(0.1,0.1, parentLoc=(0,0,0.0765), key=10)
@@ -197,24 +198,15 @@ class pop(object):
 #o.reproduce(3, key=40, duration=20)
 
 
-population = pop(3, key=5)
+population = pop(30, key=5)
 
-#population.print()
+kframe = 30
+for i in range(6):
+    print("Starting step", i)
+    population.reproduce(5, key=kframe)
+    population.retire(key=kframe+5)
+    population.select(0.8, key=kframe+25)
+    population.print()
+    kframe += 30
 
-population.reproduce(2, key=30)
-
-#population.print()
-
-#population.retire(key=120)
-
-#population.print()
-
-#population.select(0.5, key=170)
-
-#population.print()
-
-#time.sleep(5)
-
-#for i in range(5):
-#    population[i].die()
 
