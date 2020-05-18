@@ -116,15 +116,15 @@ class pop(object):
     Models a population of organisms.
     """
     def __init__(self, N, key=0):
-        
+               
         # Create a population group object and also an instance of it.
-        if "population" not in bpy.data.collections:
-            bpy.data.collections.new("population")
-            
-        if "population" not in bpy.context.scene.objects:
-            bpy.ops.object.collection_instance_add(collection="population")
+        if "population" in bpy.data.collections: 
+            self.popObj = bpy.data.collections["population"]
+        else:
+            self.popObj = bpy.data.collections.new("population")
 
-        self.popObj = bpy.context.scene.objects["population"]
+        parent = bpy.data.objects["fitnessLandscape"].users_collection[0]
+        parent.children.link(self.popObj) # Add the new collection under a parent
 
         # There is also a list of the organism objects in the population.
         self.population = []
@@ -133,17 +133,18 @@ class pop(object):
             o = organism(random.gauss(0, 0.1), random.gauss(0,0.1), 
                          parentLoc=(0,0,0.0765), key=key, duration=20) 
             
-            
-            #self.popObj.objects.link(o.obj)
-            bpy.context.view_layer.objects.active = o.obj
-            bpy.ops.object.collection_link(collection="population")
+            # Step 1
+            oldCollection = o.obj.users_collection[0]
+ 
+            # Step 2
+            self.popObj.objects.link(o.obj) 
+            oldCollection.objects.unlink(o.obj) 
             
             self.population.append(o)
 
         # Sort to put the least fit at the front.
         self.population.sort(key=lambda ob: ob.fitness)
-
-
+  
     def reproduce(self, N, key=0, duration=20):
         """
         We welcome a new generation.
@@ -165,7 +166,7 @@ class pop(object):
         ## We retire them backward so we can just use pop() to remove.
         for i in range(len(self.population)-1,-1,-1):
             if self.population[i].reproduced:
-                self.population[i].die()
+                self.population[i].die(key=key)
                 self.population.pop(i)
                 
     def select(self, fraction, key=0):
@@ -175,7 +176,7 @@ class pop(object):
         if 0 <= fraction <= 1:
             Nselected = int(fraction * len(self.population))
             for i in range(Nselected):
-                self.population[1].die()
+                self.population[1].die(key=key)
                 self.population.pop(1)
         else:
             sys.exit("must select away a positive fraction.")
