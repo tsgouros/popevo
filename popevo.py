@@ -100,28 +100,63 @@ class organism(object):
         return out
 
     def die(self, key=0):
-        bpy.data.objects.remove(bpy.data.objects[self.obj.name])
-        
+        """
+        In this world, organisms never die, they just disappear.
+        """
+        if key == 0:
+            self.obj.hide_render = True
+        else:
+            bpy.context.scene.frame_set(key)
+            self.obj.hide_render = True
+            self.obj.keyframe_insert(data_path="hide_render",
+                                     frame=key, index=-1)        
 
 class pop(object):
     """
     Models a population of organisms.
     """
     def __init__(self, N, key=0):
-        self.population = [organism(random.gauss(0, 0.1), random.gauss(0,0.1), parentLoc=(0,0,0.0765),key=10) for i in range(N)]
+        
+        # Create a population group object and also an instance of it.
+        if "population" not in bpy.data.collections:
+            bpy.data.collections.new("population")
+            
+        if "population" not in bpy.context.scene.objects:
+            bpy.ops.object.collection_instance_add(collection="population")
 
+        self.popObj = bpy.context.scene.objects["population"]
+
+        # There is also a list of the organism objects in the population.
+        self.population = []
+
+        for i in range(N):
+            o = organism(random.gauss(0, 0.1), random.gauss(0,0.1), 
+                         parentLoc=(0,0,0.0765), key=key, duration=20) 
+            
+            
+            #self.popObj.objects.link(o.obj)
+            bpy.context.view_layer.objects.active = o.obj
+            bpy.ops.object.collection_link(collection="population")
+            
+            self.population.append(o)
+
+        # Sort to put the least fit at the front.
         self.population.sort(key=lambda ob: ob.fitness)
 
 
-    def reproduce(self, N, key=0):
+    def reproduce(self, N, key=0, duration=20):
         """
         We welcome a new generation.
         """
         young = []
-        for p in self.population:
-            young.extend(p.reproduce(2))
-
+        for organism in self.population:
+            young.extend(organism.reproduce(N, key=key, 
+                                            duration=duration))
+        # Incorporate the new young'uns into the population.
         self.population.extend(young)
+
+        # Sort to keep the least fit near the front of the line.
+        self.population.sort(key=lambda ob: ob.fitness)
 
     def retire(self, key=0):
         """
@@ -150,12 +185,12 @@ class pop(object):
         print(self.population)
         
 
-o = organism(0.1,0.1, parentLoc=(0,0,0.0765), key=10)
+#o = organism(0.1,0.1, parentLoc=(0,0,0.0765), key=10)
 
-o.reproduce(3, key=40, duration=20)
+#o.reproduce(3, key=40, duration=20)
 
 
-#population = pop(3, key=20)
+population = pop(3, key=5)
 
 #population.print()
 
