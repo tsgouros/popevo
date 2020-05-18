@@ -133,10 +133,8 @@ class pop(object):
             o = organism(random.gauss(0, 0.1), random.gauss(0,0.1), 
                          parentLoc=(0,0,0.0765), key=key, duration=20) 
             
-            # Step 1
+            # Move new organisms into the population collection.
             oldCollection = o.obj.users_collection[0]
- 
-            # Step 2
             self.popObj.objects.link(o.obj) 
             oldCollection.objects.unlink(o.obj) 
             
@@ -151,8 +149,16 @@ class pop(object):
         """
         young = []
         for organism in self.population:
-            young.extend(organism.reproduce(N, key=key, 
-                                            duration=duration))
+            orgList = organism.reproduce(N, key=key, duration=duration)
+            
+            # Move new organisms into the population collection.
+            for o in orgList:
+                oldCollection = o.obj.users_collection[0]
+                self.popObj.objects.link(o.obj) 
+                oldCollection.objects.unlink(o.obj) 
+
+            young.extend(orgList)
+
         # Incorporate the new young'uns into the population.
         self.population.extend(young)
 
@@ -195,7 +201,7 @@ population = pop(3, key=5)
 
 #population.print()
 
-#population.reproduce(2, key=70)
+population.reproduce(2, key=30)
 
 #population.print()
 
