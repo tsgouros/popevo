@@ -46,15 +46,25 @@ class organism(object):
             startLoc = self.location
         else:
             startLoc = parentLoc
-        
-        bpy.ops.mesh.primitive_ico_sphere_add(location=startLoc, radius=self.radius)
+                    
+        bpy.ops.mesh.primitive_ico_sphere_add(location=startLoc, 
+                                              radius=self.radius)
         self.obj = bpy.context.object
         self.obj.active_material = bpy.data.materials.get("orgMaterial")
         self.reproduced = False
         
         if key != 0:
+            # Start hidden.
+            bpy.context.scene.frame_set(1)
+            self.obj.hide_render = True
+            self.obj.keyframe_insert(data_path="hide_render", 
+                                     frame=1, index=-1)
+                           
             bpy.context.scene.frame_set(key)
+            self.obj.hide_render = False
             self.obj.keyframe_insert(data_path="location", 
+                                     frame=key, index=-1)
+            self.obj.keyframe_insert(data_path="hide_render", 
                                      frame=key, index=-1)
             
             # Move the object to the halfway point, set another key frame.
@@ -74,7 +84,7 @@ class organism(object):
             self.obj.keyframe_insert(data_path="location", 
                                      frame=newFrame, index=-1)
         
-    def reproduce(self, N, key=0):
+    def reproduce(self, N, key=0, duration=20):
         """
         Produces N children somewhere nearby on the fitness landscape.
         """
@@ -83,7 +93,8 @@ class organism(object):
             newX = self.x + random.gauss(0, self.fitstep)
             newY = self.y + random.gauss(0, self.fitstep)
             
-            out.append(organism(newX, newY))
+            out.append(organism(newX, newY, parentLoc=self.location,
+                       key=key, duration=duration))
 
         self.reproduced = True
         return out
@@ -140,6 +151,8 @@ class pop(object):
         
 
 o = organism(0.1,0.1, parentLoc=(0,0,0.0765), key=10)
+
+o.reproduce(3, key=40, duration=20)
 
 
 #population = pop(3, key=20)
