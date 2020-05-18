@@ -5,6 +5,7 @@
 ## of such entities.
 import bpy
 from bpy import context
+from mathutils import Vector
 import random
 import sys
 import time
@@ -30,11 +31,14 @@ class organism(object):
         self.fitstep = 0.025
         self.radius = 0.005
         landscape = bpy.data.objects['fitnessLandscape']
-        res = landscape.ray_cast((x,y,1000.0),(0,0,-1))
-        if res[0]:
+        sourcePoint = landscape.matrix_world.inverted() @ Vector((x, y, 1000.0))
+        
+        (hit, hitLoc, norm, index) = landscape.ray_cast(sourcePoint,
+                                                        (0,0,-1))
+        if hit:
             # We have the intersection location in mesh 
             # coordinates. xform to world coordinates.
-            self.location = landscape.matrix_world @ res[1]
+            self.location = landscape.matrix_world @ hitLoc
         else:
             sys.exit("point is not over fitnessLandscape")
             
@@ -201,7 +205,7 @@ class pop(object):
 population = pop(30, key=5)
 
 kframe = 30
-for i in range(6):
+for i in range(4):
     print("Starting step", i)
     population.reproduce(5, key=kframe)
     population.retire(key=kframe+5)
