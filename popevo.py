@@ -74,7 +74,7 @@ class organism(object):
             # Move the object to the halfway point, set another key frame.
             midpoint = ((self.x + parentLoc[0])/2.0, 
                         (self.y + parentLoc[1])/2.0,
-                        0.1 + (self.fitness + parentLoc[2])/2.0)
+                        0.03 + (self.fitness + parentLoc[2])/2.0)
             newFrame = key + int(duration/2.0)
             bpy.context.scene.frame_set(newFrame)
             self.obj.location = midpoint
@@ -186,8 +186,8 @@ class pop(object):
         if 0 <= fraction <= 1:
             Nselected = int(fraction * len(self.population))
             for i in range(Nselected):
-                self.population[1].die(key=key)
-                self.population.pop(1)
+                self.population[0].die(key=key)
+                self.population.pop(0)
         else:
             sys.exit("must select away a positive fraction.")
 
@@ -205,12 +205,13 @@ class pop(object):
 population = pop(30, key=5)
 
 kframe = 30
-for i in range(4):
+for i in range(15):
     print("Starting step", i)
     population.reproduce(5, key=kframe)
     population.retire(key=kframe+5)
     population.select(0.8, key=kframe+25)
-    population.print()
+#    population.print()
     kframe += 30
 
 
+bpy.ops.render.render(animation=True)
